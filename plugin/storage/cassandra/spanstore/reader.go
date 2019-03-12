@@ -37,7 +37,8 @@ const (
 	querySpanByTraceID = `
 		SELECT trace_id, span_id, parent_id, operation_name, flags, start_time, duration, tags, logs, refs, process
 		FROM traces
-		WHERE trace_id = ?`
+		WHERE trace_id = ?
+		LIMIT 500`
 	queryByTag = `
 		SELECT trace_id
 		FROM tag_index
