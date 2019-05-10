@@ -22,13 +22,11 @@ import (
 	"mime"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/gorilla/mux"
-	tchanThrift "github.com/uber/tchannel-go/thrift"
 
 	"github.com/jaegertracing/jaeger/cmd/collector/app"
 	"github.com/jaegertracing/jaeger/model/converter/thrift/zipkin"
@@ -88,11 +86,12 @@ func (aH *APIHandler) saveSpans(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tSpans []*zipkincore.Span
-	if contentType == "application/x-thrift" {
+	switch contentType {
+	case "application/x-thrift":
 		tSpans, err = zipkin.DeserializeThrift(bodyBytes)
-	} else if contentType == "application/json" {
+	case "application/json":
 		tSpans, err = DeserializeJSON(bodyBytes)
-	} else {
+	default:
 		http.Error(w, "Unsupported Content-Type", http.StatusBadRequest)
 		return
 	}
@@ -174,8 +173,8 @@ func gunzip(r io.ReadCloser) (*gzip.Reader, error) {
 
 func (aH *APIHandler) saveThriftSpans(tSpans []*zipkincore.Span) error {
 	if len(tSpans) > 0 {
-		ctx, _ := tchanThrift.NewContext(time.Minute)
-		if _, err := aH.zipkinSpansHandler.SubmitZipkinBatch(ctx, tSpans); err != nil {
+		opts := app.SubmitBatchOptions{InboundTransport: app.HTTPTransport}
+		if _, err := aH.zipkinSpansHandler.SubmitZipkinBatch(tSpans, opts); err != nil {
 			return err
 		}
 	}
