@@ -1,5 +1,4 @@
 // Copyright (c) 2019 The Jaeger Authors.
-// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dbmodel
+package setupcontext
 
-import (
-	"testing"
+var isAllInOne bool
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/jaegertracing/jaeger/model"
-)
-
-func TestTagInsertionString(t *testing.T) {
-	v := TagInsertion{"x", "y", "z"}
-	assert.Equal(t, "x:y:z", v.String())
+// SetAllInOne sets the internal flag to all in one on.
+func SetAllInOne() {
+	isAllInOne = true
 }
 
-func TestTraceIDString(t *testing.T) {
-	id := TraceIDFromDomain(model.NewTraceID(1, 1))
-	assert.Equal(t, "00000000000000010000000000000001", id.String())
+// UnsetAllInOne unsets the internal all-in-one flag.
+func UnsetAllInOne() {
+	isAllInOne = false
+}
+
+// IsAllInOne returns true when all in one mode is on.
+func IsAllInOne() bool {
+	return isAllInOne
 }

@@ -12,27 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package grpc
+package setupcontext
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/jaegertracing/jaeger/pkg/config"
 )
 
-func TestOptionsWithFlags(t *testing.T) {
-	opts := &Options{}
-	v, command := config.Viperize(opts.AddFlags)
-	command.ParseFlags([]string{
-		"--grpc-storage-plugin.binary=noop-grpc-plugin",
-		"--grpc-storage-plugin.configuration-file=config.json",
-		"--grpc-storage-plugin.log-level=debug",
-	})
-	opts.InitFromViper(v)
-
-	assert.Equal(t, opts.Configuration.PluginBinary, "noop-grpc-plugin")
-	assert.Equal(t, opts.Configuration.PluginConfigurationFile, "config.json")
-	assert.Equal(t, opts.Configuration.PluginLogLevel, "debug")
+func TestSetupContext(t *testing.T) {
+	// purely for code coverage
+	SetAllInOne()
+	defer UnsetAllInOne()
+	assert.True(t, IsAllInOne())
 }
