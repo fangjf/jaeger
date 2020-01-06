@@ -42,7 +42,6 @@ import (
 	agentGrpcRep "github.com/jaegertracing/jaeger/cmd/agent/app/reporter/grpc"
 	agentTchanRep "github.com/jaegertracing/jaeger/cmd/agent/app/reporter/tchannel"
 	"github.com/jaegertracing/jaeger/cmd/all-in-one/setupcontext"
-	basic "github.com/jaegertracing/jaeger/cmd/builder"
 	collectorApp "github.com/jaegertracing/jaeger/cmd/collector/app"
 	collector "github.com/jaegertracing/jaeger/cmd/collector/app/builder"
 	"github.com/jaegertracing/jaeger/cmd/collector/app/grpcserver"
@@ -54,6 +53,7 @@ import (
 	"github.com/jaegertracing/jaeger/cmd/flags"
 	queryApp "github.com/jaegertracing/jaeger/cmd/query/app"
 	"github.com/jaegertracing/jaeger/cmd/query/app/querysvc"
+	clientcfgHandler "github.com/jaegertracing/jaeger/pkg/clientcfg/clientcfghttp"
 	"github.com/jaegertracing/jaeger/pkg/config"
 	"github.com/jaegertracing/jaeger/pkg/healthcheck"
 	"github.com/jaegertracing/jaeger/pkg/recoveryhandler"
@@ -216,17 +216,14 @@ func startCollector(
 ) *grpc.Server {
 	metricsFactory := baseFactory.Namespace(metrics.NSOptions{Name: "collector", Tags: nil})
 
-	spanBuilder, err := collector.NewSpanHandlerBuilder(
-		cOpts,
-		spanWriter,
-		basic.Options.LoggerOption(logger),
-		basic.Options.MetricsFactoryOption(metricsFactory),
-	)
-	if err != nil {
-		logger.Fatal("Unable to set up builder", zap.Error(err))
+	spanHandlerBuilder := &collector.SpanHandlerBuilder{
+		SpanWriter:     spanWriter,
+		CollectorOpts:  *cOpts,
+		Logger:         logger,
+		MetricsFactory: metricsFactory,
 	}
 
-	zipkinSpansHandler, jaegerBatchesHandler, grpcHandler := spanBuilder.BuildHandlers()
+	zipkinSpansHandler, jaegerBatchesHandler, grpcHandler := spanHandlerBuilder.BuildHandlers()
 
 	{
 		ch, err := tchannel.NewChannel("jaeger-collector", &tchannel.ChannelOptions{})
@@ -244,6 +241,7 @@ func startCollector(
 			logger.Fatal("Unable to start listening on channel", zap.Error(err))
 		}
 		logger.Info("Starting jaeger-collector TChannel server", zap.Int("port", cOpts.CollectorPort))
+		logger.Warn("TChannel has been deprecated and will be removed in a future release")
 		ch.Serve(listener)
 	}
 
@@ -256,12 +254,23 @@ func startCollector(
 		r := mux.NewRouter()
 		apiHandler := collectorApp.NewAPIHandler(jaegerBatchesHandler)
 		apiHandler.RegisterRoutes(r)
-		httpPortStr := ":" + strconv.Itoa(cOpts.CollectorHTTPPort)
-		recoveryHandler := recoveryhandler.NewRecoveryHandler(logger, true)
 
+		cfgHandler := clientcfgHandler.NewHTTPHandler(clientcfgHandler.HTTPHandlerParams{
+			ConfigManager: &clientcfgHandler.ConfigManager{
+				SamplingStrategyStore: strategyStore,
+				// TODO provide baggage manager
+			},
+			MetricsFactory:         metricsFactory,
+			BasePath:               "/api",
+			LegacySamplingEndpoint: false,
+		})
+		cfgHandler.RegisterRoutes(r)
+
+		recoveryHandler := recoveryhandler.NewRecoveryHandler(logger, true)
 		go startZipkinHTTPAPI(logger, cOpts.CollectorZipkinHTTPPort, zipkinSpansHandler, recoveryHandler)
 
-		logger.Info("Starting jaeger-collector HTTP server", zap.Int("http-port", cOpts.CollectorHTTPPort))
+		httpPortStr := ":" + strconv.Itoa(cOpts.CollectorHTTPPort)
+		logger.Info("Starting jaeger-collector HTTP server", zap.String("http-host-port", httpPortStr))
 		go func() {
 			if err := http.ListenAndServe(httpPortStr, recoveryHandler(r)); err != nil {
 				logger.Fatal("Could not launch jaeger-collector HTTP server", zap.Error(err))

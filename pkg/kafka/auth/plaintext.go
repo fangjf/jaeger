@@ -1,5 +1,4 @@
 // Copyright (c) 2019 The Jaeger Authors.
-// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package builder defines builder resources (like logger and metrics) shared by jaeger components
-// They are defined in this shared location so that if several components are wired into
-// a single binary (e.g. a local container of complete Jaeger backend) they can all share
-// the builder resources
-package builder
+package auth
+
+import (
+	"github.com/Shopify/sarama"
+)
+
+// PlainTextConfig describes the configuration properties needed for SASL/PLAIN with kafka
+type PlainTextConfig struct {
+	UserName string
+	Password string
+}
+
+func setPlainTextConfiguration(config *PlainTextConfig, saramaConfig *sarama.Config) {
+	saramaConfig.Net.SASL.Enable = true
+	saramaConfig.Net.SASL.User = config.UserName
+	saramaConfig.Net.SASL.Password = config.Password
+}

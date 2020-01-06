@@ -37,7 +37,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	basicB "github.com/jaegertracing/jaeger/cmd/builder"
 	"github.com/jaegertracing/jaeger/cmd/collector/app"
 	"github.com/jaegertracing/jaeger/cmd/collector/app/builder"
 	"github.com/jaegertracing/jaeger/cmd/collector/app/grpcserver"
@@ -47,6 +46,7 @@ import (
 	"github.com/jaegertracing/jaeger/cmd/docs"
 	"github.com/jaegertracing/jaeger/cmd/env"
 	"github.com/jaegertracing/jaeger/cmd/flags"
+	clientcfgHandler "github.com/jaegertracing/jaeger/pkg/clientcfg/clientcfghttp"
 	"github.com/jaegertracing/jaeger/pkg/config"
 	"github.com/jaegertracing/jaeger/pkg/healthcheck"
 	"github.com/jaegertracing/jaeger/pkg/recoveryhandler"
@@ -96,14 +96,11 @@ func main() {
 			}
 
 			builderOpts := new(builder.CollectorOptions).InitFromViper(v)
-			handlerBuilder, err := builder.NewSpanHandlerBuilder(
-				builderOpts,
-				spanWriter,
-				basicB.Options.LoggerOption(logger),
-				basicB.Options.MetricsFactoryOption(metricsFactory),
-			)
-			if err != nil {
-				logger.Fatal("Unable to set up builder", zap.Error(err))
+			handlerBuilder := &builder.SpanHandlerBuilder{
+				SpanWriter:     spanWriter,
+				CollectorOpts:  *builderOpts,
+				Logger:         logger,
+				MetricsFactory: metricsFactory,
 			}
 
 			zipkinSpansHandler, jaegerBatchesHandler, grpcHandler := handlerBuilder.BuildHandlers()
@@ -126,6 +123,7 @@ func main() {
 					logger.Fatal("Unable to start listening on channel", zap.Error(err))
 				}
 				logger.Info("Starting jaeger-collector TChannel server", zap.Int("port", builderOpts.CollectorPort))
+				logger.Warn("TChannel has been deprecated and will be removed in a future release")
 				ch.Serve(listener)
 			}
 
@@ -138,13 +136,25 @@ func main() {
 				r := mux.NewRouter()
 				apiHandler := app.NewAPIHandler(jaegerBatchesHandler)
 				apiHandler.RegisterRoutes(r)
-				httpPortStr := ":" + strconv.Itoa(builderOpts.CollectorHTTPPort)
+
+				cfgHandler := clientcfgHandler.NewHTTPHandler(clientcfgHandler.HTTPHandlerParams{
+					ConfigManager: &clientcfgHandler.ConfigManager{
+						SamplingStrategyStore: strategyStore,
+						// TODO provide baggage manager
+					},
+					MetricsFactory:         metricsFactory,
+					BasePath:               "/api",
+					LegacySamplingEndpoint: false,
+				})
+				cfgHandler.RegisterRoutes(r)
+
 				recoveryHandler := recoveryhandler.NewRecoveryHandler(logger, true)
 				httpHandler := recoveryHandler(r)
 
 				go startZipkinHTTPAPI(logger, builderOpts.CollectorZipkinHTTPPort, builderOpts.CollectorZipkinAllowedOrigins, builderOpts.CollectorZipkinAllowedHeaders, zipkinSpansHandler, recoveryHandler)
 
-				logger.Info("Starting jaeger-collector HTTP server", zap.Int("http-port", builderOpts.CollectorHTTPPort))
+				httpPortStr := ":" + strconv.Itoa(builderOpts.CollectorHTTPPort)
+				logger.Info("Starting jaeger-collector HTTP server", zap.String("http-host-port", httpPortStr))
 				go func() {
 					if err := http.ListenAndServe(httpPortStr, httpHandler); err != nil {
 						logger.Fatal("Could not launch service", zap.Error(err))
