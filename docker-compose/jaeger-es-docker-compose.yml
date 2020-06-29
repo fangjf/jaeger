@@ -1,0 +1,74 @@
+version: '2'
+
+services:
+    jaeger-collector:
+      image: jaegertracing/jaeger-collector
+      environment:
+        - SPAN_STORAGE_TYPE=elasticsearch
+      command: ["--es.server-urls=http://elasticsearch:9200", "--collector.zipkin.host-port=:9411"]
+      ports:
+        - "14269"
+        - "14268:14268"
+        - "14250"
+        - "9411:9411"
+      restart: on-failure
+      depends_on:
+        - elasticsearch
+      networks:
+        - jaeger
+
+    jaeger-query:
+      image: jaegertracing/jaeger-query
+      environment:
+        - SPAN_STORAGE_TYPE=elasticsearch
+      command: ["--es.server-urls=http://elasticsearch:9200"]
+      ports:
+        - "16686:16686"
+        - "16687"
+      restart: on-failure
+      depends_on:
+        - elasticsearch
+      networks:
+        - jaeger
+
+    jaeger-agent:
+      image: jaegertracing/jaeger-agent
+      command: ["--reporter.grpc.host-port=jaeger-collector:14250"]
+      ports:
+        - "5775:5775/udp"
+        - "6831:6831/udp"
+        - "6832:6832/udp"
+        - "5778:5778"
+      restart: on-failure
+      depends_on:
+        - jaeger-collector
+      networks:
+        - jaeger
+
+    elasticsearch:
+      image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.7.1
+      environment:
+        - discovery.type=single-node
+        - bootstrap.memory_lock=true
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      volumes:
+        - es-data:/usr/share/elasticsearch/data
+      ports:
+        - 9200:9200
+      networks:
+        - jaeger
+
+volumes:
+  es-data:
+    driver: local
+
+networks:
+  jaeger:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.2.0/24

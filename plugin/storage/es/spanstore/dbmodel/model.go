@@ -99,3 +99,8 @@ type Service struct {
 	ServiceName   string `json:"serviceName"`
 	OperationName string `json:"operationName"`
 }
+
+// TraceIDSource is the JSON struct for Source with only a traceID in ElasticSearch
+type TraceIDSource struct {
+	TraceID TraceID `json:"traceID"`
+}

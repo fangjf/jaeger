@@ -150,8 +150,7 @@
               "ignore_above":256
             },
             "value":{
-              "type":"keyword",
-              "ignore_above":256
+              "type":"text"
             },
             "tagType":{
               "type":"keyword",

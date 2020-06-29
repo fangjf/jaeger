@@ -205,9 +205,24 @@ func (s SearchServiceWrapper) IgnoreUnavailable(ignoreUnavailable bool) es.Searc
 	return WrapESSearchService(s.searchService.IgnoreUnavailable(ignoreUnavailable))
 }
 
+// FetchSourceContext calls this function to internal service.
+func (s SearchServiceWrapper) FetchSourceContext(fetchSourceContext *elastic.FetchSourceContext) es.SearchService {
+	return WrapESSearchService(s.searchService.FetchSourceContext(fetchSourceContext))
+}
+
 // Query calls this function to internal service.
 func (s SearchServiceWrapper) Query(query elastic.Query) es.SearchService {
 	return WrapESSearchService(s.searchService.Query(query))
+}
+
+// SearchAfter calls this function to internal service.
+func (s SearchServiceWrapper) SearchAfter(sortValues ...interface{}) es.SearchService {
+	return WrapESSearchService(s.searchService.SearchAfter(sortValues...))
+}
+
+// Sort calls this function to internal service.
+func (s SearchServiceWrapper) Sort(field string, ascending bool) es.SearchService {
+	return WrapESSearchService(s.searchService.Sort(field, ascending))
 }
 
 // Do calls this function to internal service.

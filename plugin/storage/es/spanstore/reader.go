@@ -58,7 +58,7 @@ const (
 	tagKeyField            = "key"
 	tagValueField          = "value"
 
-	defaultDocCount  = 10000 // the default elasticsearch allowed limit
+	defaultDocCount  = 1000 // the default elasticsearch allowed limit
 	defaultNumTraces = 100
 )
 
@@ -509,20 +509,53 @@ func (s *SpanReader) findTraceIDs(ctx context.Context, traceQuery *spanstore.Tra
 	//      },
 	//      "aggs": { "traceIDs" : { "terms" : {"size": 100,"field": "traceID" }}}
 	//  }
-	aggregation := s.buildTraceIDAggregation(traceQuery.NumTraces)
+	// aggregation := s.buildTraceIDAggregation(traceQuery.NumTraces)
 	boolQuery := s.buildFindTraceIDsQuery(traceQuery)
 	jaegerIndices := s.timeRangeIndices(s.spanIndexPrefix, traceQuery.StartTimeMin, traceQuery.StartTimeMax)
 
-	searchService := s.client.Search(jaegerIndices...).
-		Size(0). // set to 0 because we don't want actual documents.
-		Aggregation(traceIDAggregation, aggregation).
-		IgnoreUnavailable(true).
-		Query(boolQuery)
-
-	searchResult, err := searchService.Do(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("search services failed: %w", err)
+	traceIDMap := make(map[dbmodel.TraceID]bool)
+	var sortValues []interface{}
+	fetchSourceContext := elastic.NewFetchSourceContext(true).Include(traceIDField)
+SearchLoop:
+	for i := 0; i < 100; i++ {
+		searchService := s.client.Search(jaegerIndices...).
+			// Size(0). // set to 0 because we don't want actual documents.
+			Size(traceQuery.NumTraces).
+			FetchSourceContext(fetchSourceContext).
+			// Aggregation(traceIDAggregation, aggregation).
+			IgnoreUnavailable(true).
+			Query(boolQuery).
+			Sort(startTimeField, false)
+		if i > 0 {
+			searchService.SearchAfter(sortValues...)
+		}
+		searchResult, err := searchService.Do(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("search services failed: %w", err)
+		}
+		if searchResult.Hits.TotalHits == 0 {
+			return []string{}, nil
+		}
+		for _, hit := range searchResult.Hits.Hits {
+			var ts dbmodel.TraceIDSource
+			err := json.Unmarshal(*hit.Source, &ts)
+			if err != nil {
+				return nil, fmt.Errorf("unmarshal source failed: %w", err)
+			}
+			traceIDMap[ts.TraceID] = true
+			sortValues = hit.Sort
+			if len(traceIDMap) >= traceQuery.NumTraces {
+				break SearchLoop
+			}
+		}
 	}
+	traceIDs := make([]string, 0, traceQuery.NumTraces)
+	for traceID := range traceIDMap {
+		traceIDs = append(traceIDs, string(traceID))
+	}
+	return traceIDs, nil
+
+	/**
 	if searchResult.Aggregations == nil {
 		return []string{}, nil
 	}
@@ -533,6 +566,7 @@ func (s *SpanReader) findTraceIDs(ctx context.Context, traceQuery *spanstore.Tra
 
 	traceIDBuckets := bucket.Buckets
 	return bucketToStringArray(traceIDBuckets)
+	*/
 }
 
 func (s *SpanReader) buildTraceIDAggregation(numOfTraces int) elastic.Aggregation {

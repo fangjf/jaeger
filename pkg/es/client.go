@@ -65,7 +65,10 @@ type SearchService interface {
 	Size(size int) SearchService
 	Aggregation(name string, aggregation elastic.Aggregation) SearchService
 	IgnoreUnavailable(ignoreUnavailable bool) SearchService
+	FetchSourceContext(fetchSourceContext *elastic.FetchSourceContext) SearchService
 	Query(query elastic.Query) SearchService
+	SearchAfter(sortValues ...interface{}) SearchService
+	Sort(field string, ascending bool) SearchService
 	Do(ctx context.Context) (*elastic.SearchResult, error)
 }
 
