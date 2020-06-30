@@ -1,6 +1,3 @@
 [submodule "idl"]
 	path = idl
 	url = https://github.com/jaegertracing/jaeger-idl.git
-[submodule "jaeger-ui"]
-	path = jaeger-ui
-	url = https://github.com/fangjf/jaeger-ui.git
