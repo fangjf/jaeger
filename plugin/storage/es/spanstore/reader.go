@@ -617,6 +617,12 @@ func (s *SpanReader) buildFindTraceIDsQuery(traceQuery *spanstore.TraceQueryPara
 		tagQuery := s.buildTagQuery(k, v)
 		boolQuery.Must(tagQuery)
 	}
+
+	//add FullText query
+	if traceQuery.FullText != "" {
+		fullTextQuery := s.buildFullTextQuery(traceQuery.FullText)
+		boolQuery.Must(fullTextQuery)
+	}
 	return boolQuery
 }
 
@@ -641,6 +647,12 @@ func (s *SpanReader) buildServiceNameQuery(serviceName string) elastic.Query {
 
 func (s *SpanReader) buildOperationNameQuery(operationName string) elastic.Query {
 	return elastic.NewMatchQuery(operationNameField, operationName)
+}
+
+func (s *SpanReader) buildFullTextQuery(fullText string) elastic.Query {
+	valueField := fmt.Sprintf("%s.%s", nestedTagsField, tagValueField)
+	valueQuery := elastic.NewMatchQuery(valueField, fullText)
+	return elastic.NewNestedQuery(nestedTagsField, valueQuery)
 }
 
 func (s *SpanReader) buildTagQuery(k string, v string) elastic.Query {

@@ -33,6 +33,7 @@ const (
 	operationParam   = "operation"
 	tagParam         = "tag"
 	tagsParam        = "tags"
+	fullTextParam    = "fullText"
 	startTimeParam   = "start"
 	limitParam       = "limit"
 	minDurationParam = "minDuration"
@@ -79,6 +80,7 @@ type traceQueryParameters struct {
 func (p *queryParser) parse(r *http.Request) (*traceQueryParameters, error) {
 	service := r.FormValue(serviceParam)
 	operation := r.FormValue(operationParam)
+	fullText := r.FormValue(fullTextParam)
 
 	startTime, err := p.parseTime(startTimeParam, r)
 	if err != nil {
@@ -130,6 +132,7 @@ func (p *queryParser) parse(r *http.Request) (*traceQueryParameters, error) {
 			StartTimeMin:  startTime,
 			StartTimeMax:  endTime,
 			Tags:          tags,
+			FullText:      fullText,
 			NumTraces:     limit,
 			DurationMin:   minDuration,
 			DurationMax:   maxDuration,

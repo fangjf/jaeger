@@ -47,6 +47,7 @@ type TraceQueryParameters struct {
 	ServiceName   string
 	OperationName string
 	Tags          map[string]string
+	FullText      string
 	StartTimeMin  time.Time
 	StartTimeMax  time.Time
 	DurationMin   time.Duration
