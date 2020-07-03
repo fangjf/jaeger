@@ -213,7 +213,7 @@ var _escData = map[string]*_escFile{
 		name:    ".nocover",
 		local:   "plugin/storage/es/mappings/.nocover",
 		size:    43,
-		modtime: 1551785587,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/youSSzJzFYoSEzOTkxPVcjILy4pVkgsLcnXTU/NSy1KLElNUUjLzEkt1uMCBAAA//8y
 IKK1KwAAAA==
@@ -224,7 +224,7 @@ IKK1KwAAAA==
 		name:    "jaeger-dependencies-7.json",
 		local:   "plugin/storage/es/mappings/jaeger-dependencies-7.json",
 		size:    283,
-		modtime: 1592364558,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/2zPz0vDQBDF8Xv+imXxVNrFi5fcqlYU/EWK52GbfU1HknHdmYBQ8r9LRA/S3t/nC+9Y
 OedZEr4oRzMUUV87v3iP6FBWCRmSIC1DVwu/nNcKM5ZOfT3jPx5kHHYo9LEnPcSS5szFkej57el609DL
@@ -237,7 +237,7 @@ rYyonPvp+t/efGyqpuo7AAD//66cHf8bAQAA
 		name:    "jaeger-dependencies.json",
 		local:   "plugin/storage/es/mappings/jaeger-dependencies.json",
 		size:    277,
-		modtime: 1592364558,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/2zPzUoDMRTF8f08Rbi4Km1w4ya7qhUFv5ji+pJOTqeRTIy5d0Ao8+4y4kbG/fn94Zwb
 Y0gxlOQV5Ayt3j161E1AQQ7IXYRsVrSedwLVmHshNzNjKOaAL5vH4YDKH0eWk69ByJmLM/Pz29P1ruWX
@@ -250,7 +250,7 @@ tI5ojPnp0m9vPjY1U/MdAAD//5ZQx/QVAQAA
 		name:    "jaeger-service-7.json",
 		local:   "plugin/storage/es/mappings/jaeger-service-7.json",
 		size:    878,
-		modtime: 1574834541,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/8ySwW7aQBCG736K1agnBFZViR72RluqVmppBcopikaDPdibeNeb3YEEIb97ZGTAhHDL
 IReP5H++35/t3SVKgXE5P6MnEQ4uglYwuCcuOIwih43JeDSAYbsYWcS4IoJuuQOZurVdcsB6hbGkkLcN
@@ -265,7 +265,7 @@ FMjWM2h44O1THXIYnqemcHVgpGW9YdBfxl97cdPfBU9SoiXJStAgVKQDOMZN8oroOftQZxzjh9DuXNJr
 		name:    "jaeger-service.json",
 		local:   "plugin/storage/es/mappings/jaeger-service.json",
 		size:    1060,
-		modtime: 1551785587,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/8yTT2/UMBDF7/kU1ojTamshpHLwrUARSFDQVpwQGs3Gs1mD7RjbKayqfHfk4pKkW+2J
 Q3PIn/F78/xz7NtGCMjsgqXMoASsvhN3HM8SxxvT8tkK1kWSOGfjuwSqOIQA4zX/ln5wW47Y7zDtKeoE
@@ -281,7 +281,7 @@ TmGdQJrhQAmkbHr//7o382e5j83Y/AkAAP//qd2MzCQEAAA=
 		name:    "jaeger-span-7.json",
 		local:   "plugin/storage/es/mappings/jaeger-span-7.json",
 		size:    3385,
-		modtime: 1592445331,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/+xWT2vbThC9+1OI4XcKjvhRSA+6pU1KA01akvRUyjKWRvIm+6+74zQm6LsXyXIiRZJT
 qFxK6cXCmn1Pb3bnPelhFkUgTUb3wiEzeRMgieDgBqkgfxgcmsMDmEfVskDM0hQBkgq1xcVmpRfkhc1F
@@ -300,7 +300,7 @@ MpiUv/9S/1X6HcfxzKPD/uws39u5Dfhwsj0d9N2Wnel+dxRNPU4j36PVbzkrZz8CAAD//xFfegE5DQAA
 		name:    "jaeger-span.json",
 		local:   "plugin/storage/es/mappings/jaeger-span.json",
 		size:    3793,
-		modtime: 1592445368,
+		modtime: 1593512752,
 		compressed: `
 H4sIAAAAAAAC/+xWUW/TMBB+z6+ITjxNXYSQxkPeBhtiEhtoG08IWdfkknpzHGNfy6qp/x2lSWnTOglI
 DUKCPrSN7e++++y7L34OwhCYCqOQCeIQTh6QcrKnzqA+PYFJNe+IWercQVwtD0OQOqWnSM+LKVlRZsLN
